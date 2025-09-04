@@ -1,0 +1,12 @@
+[
+  {
+    "query": "What is the attribution formula in Origin-RAG?",
+    "expected_doc_ids": ["doc_system_architecture"],
+    "ground_truth_answer": "Attribution coverage is calculated using n-gram overlap against retrieved context chunks."
+  },
+  {
+    "query": "What are the core components of Origin-RAG?",
+    "expected_doc_ids": ["doc_system_architecture"],
+    "ground_truth_answer": "Document parsing, semantic chunker, hybrid retriever, verifier, and FastAPI microservice."
+  }
+]
