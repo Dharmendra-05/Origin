@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Origin-RAG | High-Precision Source-Attribution Engine</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="glass-container">
+        <header>
+            <div class="logo">
+                <span class="badge">v0.1.0</span>
+                <h1>📍 Origin-RAG</h1>
+            </div>
+            <p class="subtitle">Source Attribution & Line-Level Citation Verification Engine</p>
+        </header>
+
+        <main class="main-grid">
+            <!-- Query Panel -->
+            <section class="card query-card">
+                <h2>🔍 Search Knowledge Base</h2>
+                <div class="input-group">
+                    <input type="text" id="query-input" placeholder="Ask a question about system architecture or docs..." value="What is the attribution formula in Origin-RAG?">
+                    <button id="search-btn" class="btn-primary">Execute Query</button>
+                </div>
+                
+                <div class="setting-row">
+                    <label>LLM Backend:
+                        <select id="llm-select">
+                            <option value="mock">Mock Engine (Deterministic)</option>
+                            <option value="openai">OpenAI GPT-4o</option>
+                            <option value="ollama">Local Ollama</option>
+                        </select>
+                    </label>
+                    <label>Top K:
+                        <input type="number" id="topk-input" value="4" min="1" max="10">
+                    </label>
+                </div>
+            </section>
+
+            <!-- Results & Attribution Panel -->
+            <section class="card result-card hidden" id="results-section">
+                <h2>💬 Answer & Verified Line Citations</h2>
+                
+                <div class="answer-box">
+                    <div class="box-header">Synthesized Response</div>
+                    <p id="answer-text">Loading...</p>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value" id="metric-coverage">0%</div>
+                        <div class="metric-label">Attribution Coverage</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="metric-risk">0.00</div>
+                        <div class="metric-label">Hallucination Risk Score</div>
+                    </div>
+                </div>
+
+                <div class="citations-box">
+                    <h3>📌 Line-Level Source Citations</h3>
+                    <ul id="citations-list" class="citations-list"></ul>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
