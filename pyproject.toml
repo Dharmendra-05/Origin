@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "origin-rag"
-version = "0.1.0"
+version = "0.1.1"
 description = "A High-Precision Source-Attribution & Line-Level Citation RAG Engine"
 readme = "README.md"
 authors = [
