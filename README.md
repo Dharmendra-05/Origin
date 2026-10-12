@@ -2,11 +2,13 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11-green.svg)](pyproject.toml)
-[![Build Status](https://img.shields.io/badge/tests-passing-brightgreen.svg)](tests/)
+[![Tests](https://github.com/Dharmendra-05/Origin/actions/workflows/tests.yml/badge.svg)](https://github.com/Dharmendra-05/Origin/actions/workflows/tests.yml)
 [![FastAPI](https://img.shields.io/badge/API-FastAPI-009688.svg)](origin_rag/api/main.py)
 [![Architecture](https://img.shields.io/badge/engines-RAG%20%7C%20Core%20%7C%20ML-blueviolet.svg)]()
 
-> **Origin** is an autonomous AI agent ecosystem combining a production-grade **RAG engine** with verifiable source attribution, an **agent micro-kernel** for tool-augmented decision loops, and an **ML provenance tracker** for experiment integrity — all connected via an event-driven architecture.
+> **Origin** is a dependency-light text RAG system whose distinguishing feature is that it refuses to trust the generator: every answer is scored against its source lines, and a hallucination-risk score is returned alongside per-chunk citations. It also ships an event bus, a plugin loader, and an experiment-provenance ledger.
+>
+> **Scope, stated plainly.** The retriever is BM25 fused with lexical token-overlap similarity via Reciprocal Rank Fusion. There is no embedding model in this repository. OriginAgent is an early prototype, not a working agent loop. Read [Limitations](#-limitations) before relying on any feature.
 
 ---
 
@@ -26,7 +28,7 @@
 
 ## 🚀 What the Project Does
 
-Origin-RAG indexes your internal document knowledge base (Markdown, Text, Code, PDFs) while preserving exact file paths, section headers, and line-level numbers (`start_line` to `end_line`).
+Origin-RAG indexes a text knowledge base (`.txt`, `.md`, `.py`, `.json`, `.csv`, `.rst` — see `origin_rag/document_loader.SUPPORTED_EXTENSIONS`) while preserving exact file paths, section headers, and line-level numbers (`start_line` to `end_line`). **PDF, DOCX and image formats are not supported.**
 
 When a query is received:
 1. **Hybrid Retrieval:** Merges dense vector similarity with sparse BM25 keyword matching using Reciprocal Rank Fusion (RRF).
@@ -48,17 +50,16 @@ Most LLM RAG pipelines suffer from two critical flaws:
 
 ## ✨ Key Features
 
-### Origin-RAG (Retrieval Engine)
+- ⚡ **Hybrid Retriever (Sparse + Lexical):** Combines BM25 term weighting (`k1=1.5`, `b=0.75`) with lexical token-overlap similarity, fused via Reciprocal Rank Fusion (`rrf_k=60`). There is no dense embedding model in this repository.
 - 🎯 **Line-Level Source Citation:** Pinpoints exact line numbers (`#L12-L18`) for every cited context chunk.
-- ⚡ **Hybrid Retriever (Dense + Sparse):** Combines BM25 term weighting with cosine embedding similarity.
 - 🛡️ **Hallucination Risk Score:** Real-time attribution scoring engine flagging ungrounded claims.
 - 🔍 **Query Rewriter:** Semantic expansion with intent classification, synonym expansion, and sub-query decomposition.
 - 🌐 **REST API & CLI:** Production FastAPI endpoints alongside an easy-to-use terminal interface.
 
 ### Origin-Core (Agent Kernel)
-- 🤖 **OriginAgent Micro-Kernel:** State-graph execution loops with plan → act → observe cycles.
-- 🧰 **ToolRegistry:** Decorator-based dynamic tool registration with schema validation.
-- 🧠 **AgentMemory:** Sliding-window short-term + persistent long-term memory management.
+- 🤖 **OriginAgent Micro-Kernel:** *(prototype)* single-step dispatcher that routes an instruction to a registered tool. It does not yet loop, and it does not call an LLM.
+- 🧰 **ToolRegistry:** Decorator-based tool registration. Parameter schemas are *captured* from type hints, not validated.
+- 🧠 **AgentMemory:** Sliding-window short-term context only. There is no persistent long-term store.
 - 📡 **Event Bus:** Pub/sub inter-agent communication with priority-ordered topic routing.
 - 🔌 **Plugin Loader:** Runtime tool discovery from external Python modules.
 
@@ -139,8 +140,9 @@ pipeline.ingest_directory("sample_data/knowledge_base")
 result = pipeline.query("What is the attribution formula in Origin-RAG?")
 
 print("Answer:", result.answer)
-print("Hallucination Risk Score:", result.hallucination_score)
-print("Citations:", result.citations)
+print("Hallucination Risk Score:", result.attribution_report.hallucination_score)
+for c in result.attribution_report.citations:
+    print(f"  {c.chunk_id}  lines {c.start_line}-{c.end_line}")
 ```
 
 ### 2. Command Line Interface (CLI)

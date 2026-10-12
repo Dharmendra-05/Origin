@@ -6,6 +6,7 @@ import hashlib
 import json
 import sqlite3
 import time
+from contextlib import closing
 from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field
 
@@ -29,8 +30,16 @@ class ProvenanceTracker:
         self._init_db()
 
     def _init_db(self):
-        """Initializes SQLite provenance database tables."""
-        with sqlite3.connect(self.db_path) as conn:
+        """Initializes SQLite provenance database tables.
+
+        Note: ``sqlite3.connect`` used directly as a context manager commits but does
+        NOT close the connection -- the connection object's ``__exit__`` only handles
+        the transaction. On Windows the resulting handle leak makes the database file
+        undeletable while the process holds it open, which surfaces as
+        ``PermissionError [WinError 32]`` in test teardown. ``contextlib.closing``
+        closes deterministically.
+        """
+        with closing(sqlite3.connect(self.db_path)) as conn, conn:
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS experiment_provenance (
                     experiment_id TEXT PRIMARY KEY,
@@ -69,7 +78,7 @@ class ProvenanceTracker:
             metrics=metrics
         )
 
-        with sqlite3.connect(self.db_path) as conn:
+        with closing(sqlite3.connect(self.db_path)) as conn, conn:
             conn.execute(
                 """
                 INSERT OR REPLACE INTO experiment_provenance 

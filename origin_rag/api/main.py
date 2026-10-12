@@ -2,6 +2,9 @@
 FastAPI Microservice Application for Origin-RAG.
 """
 
+import os
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from origin_rag.config import settings
@@ -20,14 +23,55 @@ app = FastAPI(
     version="0.1.0"
 )
 
-# Enable CORS for frontend integration
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# CORS for frontend integration.
+#
+# `allow_origins=["*"]` combined with `allow_credentials=True` is rejected by
+# browsers and is unsafe: it would let any site make credentialed requests to
+# this service. Set ORIGIN_RAG_ALLOWED_ORIGINS to a comma-separated allowlist
+# for a real deployment. Default is same-origin only (no CORS headers at all).
+_ALLOWED_ORIGINS = [
+    o.strip()
+    for o in os.environ.get("ORIGIN_RAG_ALLOWED_ORIGINS", "").split(",")
+    if o.strip()
+]
+if _ALLOWED_ORIGINS:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_ALLOWED_ORIGINS,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+# /ingest walks a client-supplied filesystem path recursively. Without this
+# allowlist the endpoint is an arbitrary-file-read primitive on any instance
+# reachable from outside the host.
+INGEST_ALLOWED_ROOTS = [
+    Path(p).expanduser().resolve()
+    for p in os.environ.get(
+        "ORIGIN_RAG_INGEST_ROOTS", "./sample_data"
+    ).split(os.pathsep)
+    if p.strip()
+]
+
+
+def _resolve_ingest_path(raw: str) -> Path:
+    """Resolve `raw` and refuse anything outside INGEST_ALLOWED_ROOTS."""
+    candidate = Path(raw).expanduser().resolve()
+    if not any(
+        candidate == root or root in candidate.parents
+        for root in INGEST_ALLOWED_ROOTS
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail=(
+                f"Path {candidate} is outside the allowed ingest roots: "
+                f"{[str(r) for r in INGEST_ALLOWED_ROOTS]}. "
+                "Set ORIGIN_RAG_INGEST_ROOTS to widen this."
+            ),
+        )
+    return candidate
+
 
 # Global pipeline instance
 pipeline = OriginRAGPipeline()
@@ -47,15 +91,18 @@ def health_check():
 
 @app.post("/ingest", response_model=IngestResponse, tags=["RAG"])
 def ingest_documents(req: IngestRequest):
-    """Ingests local directory or file into vector store."""
+    """Ingests a local directory or file, constrained to the allowed roots."""
     try:
-        count = pipeline.ingest_directory(req.path)
+        target = _resolve_ingest_path(req.path)
+        count = pipeline.ingest_directory(str(target))
         return IngestResponse(
             status="success",
             documents_loaded=len(pipeline.documents),
             chunks_created=count,
-            message=f"Successfully indexed {count} chunks from {req.path}"
+            message=f"Successfully indexed {count} chunks from {target}"
         )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 

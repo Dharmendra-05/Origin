@@ -46,15 +46,16 @@ def main():
         print("\n=== ANSWER ===")
         print(res.answer)
         
-        if args.verify or True:
-            report = res.attribution_report
-            print("\n=== ATTRIBUTION & LINE CITATIONS ===")
-            print(f"Coverage Ratio: {report.attribution_coverage * 100:.1f}%")
-            print(f"Hallucination Risk Score: {report.hallucination_score:.4f}")
-            print(f"Status: {report.summary_notes}")
-            print("\nCitations:")
-            for cite in report.citations:
-                print(f" - {cite.citation_tag}")
+        # Attribution is always reported: it is the whole point of this engine.
+        # The old `if args.verify or True:` made the flag inert dead code.
+        report = res.attribution_report
+        print("\n=== ATTRIBUTION & LINE CITATIONS ===")
+        print(f"Coverage Ratio: {report.attribution_coverage * 100:.1f}%")
+        print(f"Hallucination Risk Score: {report.hallucination_score:.4f}")
+        print(f"Status: {report.summary_notes}")
+        print("\nCitations:")
+        for cite in report.citations:
+            print(f" - {cite.citation_tag}")
 
 
 if __name__ == "__main__":

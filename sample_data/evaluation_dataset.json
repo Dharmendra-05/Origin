@@ -1,12 +1,18 @@
 [
   {
     "query": "What is the attribution formula in Origin-RAG?",
-    "expected_doc_ids": ["doc_system_architecture"],
-    "ground_truth_answer": "Attribution coverage is calculated using n-gram overlap against retrieved context chunks."
+    "expected_doc_ids": [
+      "doc_e14bd3ac8b16f27a"
+    ],
+    "ground_truth_answer": "Attribution coverage is calculated using n-gram overlap against retrieved context chunks.",
+    "_note": "doc_id is derived from sha256(content)[:16] by DocumentLoader._load_file; regenerate with: python -c \"import hashlib,pathlib;print('doc_'+hashlib.sha256(pathlib.Path('sample_data/knowledge_base/system_architecture.md').read_text().encode()).hexdigest()[:16])\""
   },
   {
     "query": "What are the core components of Origin-RAG?",
-    "expected_doc_ids": ["doc_system_architecture"],
-    "ground_truth_answer": "Document parsing, semantic chunker, hybrid retriever, verifier, and FastAPI microservice."
+    "expected_doc_ids": [
+      "doc_e14bd3ac8b16f27a"
+    ],
+    "ground_truth_answer": "Document parsing, semantic chunker, hybrid retriever, verifier, and FastAPI microservice.",
+    "_note": "doc_id is derived from sha256(content)[:16] by DocumentLoader._load_file; regenerate with: python -c \"import hashlib,pathlib;print('doc_'+hashlib.sha256(pathlib.Path('sample_data/knowledge_base/system_architecture.md').read_text().encode()).hexdigest()[:16])\""
   }
 ]

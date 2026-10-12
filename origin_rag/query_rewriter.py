@@ -64,8 +64,9 @@ class QueryRewriter:
             r"\btutorial\b", r"\bimplement\b", r"\bsetup\b"
         ],
         "definitional": [
-            r"\bwhat\s+is\b", r"\bdefine\b", r"\bmeaning\b",
-            r"\bexplain\b"
+            r"\bwhat\s+is\b", r"\bwhat\s+are\b", r"\bwhat\s+does\b",
+            r"\bdefine\b", r"\bmeaning\b", r"\bexplain\b",
+            r"\bsignificance\b", r"\bpurpose\s+of\b"
         ],
     }
 

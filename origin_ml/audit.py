@@ -4,6 +4,7 @@ Provenance Auditor module verifying dataset integrity and experiment lineage.
 
 import json
 import sqlite3
+from contextlib import closing
 from typing import Optional, Dict, Any
 from origin_ml.tracker import ProvenanceTracker, ExperimentRecord
 
@@ -21,7 +22,10 @@ class ProvenanceAuditor:
         prompt_template: str
     ) -> Dict[str, Any]:
         """Audits an experiment against candidate dataset and prompt text."""
-        with sqlite3.connect(self.tracker.db_path) as conn:
+        # contextlib.closing is required: sqlite3.connect as a bare context manager
+        # commits the transaction but leaves the connection open, leaking a file
+        # handle that blocks deletion of the database on Windows.
+        with closing(sqlite3.connect(self.tracker.db_path)) as conn:
             cursor = conn.cursor()
             cursor.execute(
                 "SELECT experiment_id, model_name, dataset_hash, prompt_hash, hyperparameters, metrics, timestamp FROM experiment_provenance WHERE experiment_id = ?",
